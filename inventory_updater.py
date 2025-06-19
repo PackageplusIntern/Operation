@@ -186,12 +186,11 @@ print(f"DEBUG_TIME: 嘗試將時間寫入單元格 G{last_row_calculated}")
 
 # 暫時將時間寫入一個固定的、不會被數據覆蓋的單元格，例如 Z1 (第 26 欄, 第 1 行)
 # 這樣可以明確判斷 update_cell 本身是否有問題
-sheet.update_cell(row=1, col=26, f"最後更新時間：{current_time}") 
+sheet.update_cell(row=1, col=26, value=f"最後更新時間：{current_time}") # <--- 在這裡加上 value=
 print(f"DEBUG_TIME: 也嘗試將時間寫入固定單元格 Z1。") # 增加一個日誌確認固定寫入
 
 # 保留您原來的寫法，看它最終寫在哪裡
-sheet.update_cell(last_row_calculated, 7, f"最後更新時間：{current_time}") 
-
+sheet.update_cell(row=last_row_calculated, col=7, value=f"最後更新時間：{current_time}") # <--- 在這裡也加上 value=，並建議明確寫上 row= 和 col=
 
 print("✅ 已成功同步至 Google Sheet！")
 
