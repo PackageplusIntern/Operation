@@ -35,22 +35,21 @@ jobs:
     - name: 安裝 ChromeDriver
       run: |
 
-        # 並且在變數賦值 `=` 的兩邊，確保沒有多餘的空格 (這是 shell 語法)。
+        
         CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
         echo "Detected Chrome Version: $CHROME_VERSION"
         
-        # 下載對應版本的 ChromeDriver
-        # 從 Chrome for Testing 下載最新的 ChromeDriver
+      
         CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.version")
         echo "Detected ChromeDriver Version: $CHROMEDRIVER_VERSION"
         
-        # 獲取 ChromeDriver 的下載 URL
+      
         CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.downloads.chromedriver[] | select(.platform == \"linux64\") | .url")
         
         wget "$CHROMEDRIVER_URL" -O chromedriver.zip
         unzip chromedriver.zip
         
-        # 核心修改部分：直接指定解壓縮後的路徑
+        
         sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
         
         sudo chmod +x /usr/local/bin/chromedriver    
