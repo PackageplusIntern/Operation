@@ -32,26 +32,30 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
 
-    - name: 安裝 ChromeDriver # 安裝對應 Chrome 版本的 ChromeDriver
+    - name: 安裝 ChromeDriver
       run: |
-        # 獲取已安裝 Chrome 的版本
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
-        echo "Detected Chrome Version: $CHROME_VERSION"
-        
-        # 下載對應版本的 ChromeDriver
-        # 注意: ChromeDriver 鏡像網站可能會變更，請檢查最新的下載 URL
-        # 從 Chrome for Testing 下載最新的 ChromeDriver
-        CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.version")
-        echo "Detected ChromeDriver Version: $CHROMEDRIVER_VERSION"
-        
-        # 獲取 ChromeDriver 的下載 URL
-        CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.downloads.chromedriver[] | select(.platform == \"linux64\") | .url")
-        
+        # ... (前面下載和解壓縮的指令不變)
         wget "$CHROMEDRIVER_URL" -O chromedriver.zip
         unzip chromedriver.zip
-        sudo mv chromedriver /usr/local/bin/chromedriver # 將 ChromeDriver 移動到 PATH
-        sudo chmod +x /usr/local/bin/chromedriver # 賦予執行權限
-
+        
+        # === 這裡需要修改 ===
+        # 尋找解壓縮後的 ChromeDriver 實際路徑
+        # 通常它會位於一個像 chromedriver-linux64/ 或 chromedriver_linux64/ 的子資料夾中
+        # 我們找到該資料夾，然後將裡面的 chromedriver 檔案移動出來
+        
+        # 查找解壓縮後的資料夾名稱 (範例：chromedriver-linux64)
+        EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "chromedriver*" -print -quit)
+        
+        if [ -n "$EXTRACTED_DIR" ]; then
+          echo "Found extracted ChromeDriver directory: $EXTRACTED_DIR"
+          sudo mv "$EXTRACTED_DIR"/chromedriver /usr/local/bin/chromedriver
+        else
+          echo "Error: Could not find extracted ChromeDriver directory."
+          exit 1 # 如果沒找到，就中止步驟
+        fi
+        
+        sudo chmod +x /usr/local/bin/chromedriver
+        
     - name: 執行 Python 腳本 # 運行您的 Python 腳本
       env:
         # 從 GitHub Secrets 載入敏感資訊
