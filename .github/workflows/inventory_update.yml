@@ -34,25 +34,24 @@ jobs:
 
     - name: 安裝 ChromeDriver
       run: |
-        # ... (前面下載和解壓縮的指令不變)
+        # 獲取已安裝 Chrome 的版本 (此行不變)
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
+        echo "Detected Chrome Version: $CHROME_VERSION"
+        
+        # 下載對應版本的 ChromeDriver
+        # 從 Chrome for Testing 下載最新的 ChromeDriver (此行不變)
+        CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.version")
+        echo "Detected ChromeDriver Version: $CHROMEDRIVER_VERSION"
+        
+        # 獲取 ChromeDriver 的下載 URL (此行不變)
+        CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.downloads.chromedriver[] | select(.platform == \"linux64\") | .url")
+        
         wget "$CHROMEDRIVER_URL" -O chromedriver.zip
         unzip chromedriver.zip
         
-        # === 這裡需要修改 ===
-        # 尋找解壓縮後的 ChromeDriver 實際路徑
-        # 通常它會位於一個像 chromedriver-linux64/ 或 chromedriver_linux64/ 的子資料夾中
-        # 我們找到該資料夾，然後將裡面的 chromedriver 檔案移動出來
-        
-        # 查找解壓縮後的資料夾名稱 (範例：chromedriver-linux64)
-        EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "chromedriver*" -print -quit)
-        
-        if [ -n "$EXTRACTED_DIR" ]; then
-          echo "Found extracted ChromeDriver directory: $EXTRACTED_DIR"
-          sudo mv "$EXTRACTED_DIR"/chromedriver /usr/local/bin/chromedriver
-        else
-          echo "Error: Could not find extracted ChromeDriver directory."
-          exit 1 # 如果沒找到，就中止步驟
-        fi
+        # === 核心修改部分：直接指定解壓縮後的路徑 ===
+        # 根據您提供的錯誤日誌，解壓縮後會在 chromedriver-linux64/ 資料夾下
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
         
         sudo chmod +x /usr/local/bin/chromedriver
         
