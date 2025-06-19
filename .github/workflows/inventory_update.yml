@@ -3,7 +3,7 @@ name: 自動更新庫存到 Google Sheet # 工作流程的名稱
 on:
   schedule:
     # 設定為 UTC 時間 04:53，對應台灣時間 12:53
-    - cron: '55 16 * * *' 
+    - cron: '00 17 * * *' 
 
   # 允許手動觸發工作流程
   workflow_dispatch:
