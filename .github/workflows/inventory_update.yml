@@ -1,0 +1,62 @@
+name: 自動更新庫存到 Google Sheet # 工作流程的名稱
+
+on:
+  schedule:
+    # 每天台灣時間早上 7 點執行 (UTC +8, 台灣時間比 UTC 早 8 小時，所以是 UTC 23:00)
+    # 你可以根據需要調整 cron 表達式
+    - cron: '0 23 * * *' # 每天 UTC 23:00 (台灣時間早上 7 點)
+
+  # 允許手動觸發工作流程
+  workflow_dispatch:
+
+jobs:
+  update_inventory:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 環境來運行此工作
+
+    steps:
+    - name: 檢查程式碼 # 下載您的儲存庫代碼
+      uses: actions/checkout@v4
+
+    - name: 設定 Python 環境 # 設定 Python 版本
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9' # 或您使用的 Python 版本，例如 '3.10', '3.11'
+
+    - name: 安裝套件 # 安裝 Python 依賴庫
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas selenium gspread oauth2client
+
+    - name: 安裝 Chrome 瀏覽器 # 安裝 Google Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+
+    - name: 安裝 ChromeDriver # 安裝對應 Chrome 版本的 ChromeDriver
+      run: |
+        # 獲取已安裝 Chrome 的版本
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
+        echo "Detected Chrome Version: $CHROME_VERSION"
+        
+        # 下載對應版本的 ChromeDriver
+        # 注意: ChromeDriver 鏡像網站可能會變更，請檢查最新的下載 URL
+        # 從 Chrome for Testing 下載最新的 ChromeDriver
+        CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.version")
+        echo "Detected ChromeDriver Version: $CHROMEDRIVER_VERSION"
+        
+        # 獲取 ChromeDriver 的下載 URL
+        CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.downloads.chromedriver[] | select(.platform == \"linux64\") | .url")
+        
+        wget "$CHROMEDRIVER_URL" -O chromedriver.zip
+        unzip chromedriver.zip
+        sudo mv chromedriver /usr/local/bin/chromedriver # 將 ChromeDriver 移動到 PATH
+        sudo chmod +x /usr/local/bin/chromedriver # 賦予執行權限
+
+    - name: 執行 Python 腳本 # 運行您的 Python 腳本
+      env:
+        # 從 GitHub Secrets 載入敏感資訊
+        IBIZA_EMAIL: ${{ secrets.IBIZA_EMAIL }}
+        IBIZA_PASSWORD: ${{ secrets.IBIZA_PASSWORD }}
+        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      run: |
+        python inventory_updater.py
