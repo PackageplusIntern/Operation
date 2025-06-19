@@ -154,25 +154,44 @@ except Exception as e:
 sheet_id = "1U6F3hvj76YGOSWodEkfZmkSS31F1QmNndI16igBkgGE"  # 替換為你的實際 Sheet ID
 sheet = client.open_by_key(sheet_id).worksheet("3. 安庫參考表（自動）")
 
-# === 更新每筆庫存資料到 Google Sheet（G欄 與 Q欄）===
-# 為了效率，使用 update_cells 批量更新
+# === 更新每筆庫存資料到 Google Sheet (G欄 與 Q欄) ===
 updates = []
 for idx, row in summary_df.iterrows():
     q_value = row['不包含R的數量']
     g_value = row['現有總庫存量']
     
-    # 欄位 G 是第 7 欄，欄位 Q 是第 17 欄
-    # idx + 2，因為 Google Sheet 第一列通常是標題，數據從第2列開始
-    updates.append(gspread.Cell(row=idx + 2, col=7, value=q_value))   # G 欄 (不包含R的數量)
-    updates.append(gspread.Cell(row=idx + 2, col=17, value=g_value))  # Q 欄 (現有總庫存量)
+    # 偵錯訊息：打印準備更新的值
+    print(f"DEBUG_DATA: 準備更新 第 {idx + 2} 行, 第 7 欄 (Q) 資料為: {q_value}")
+    print(f"DEBUG_DATA: 準備更新 第 {idx + 2} 行, 第 17 欄 (G) 資料為: {g_value}")
+
+    updates.append(gspread.Cell(row=idx + 2, col=7, value=q_value))
+    updates.append(gspread.Cell(row=idx + 2, col=17, value=g_value))
 
 if updates:
-    sheet.update_cells(updates)
+    try:
+        sheet.update_cells(updates)
+        print(f"DEBUG_DATA: 成功向 Google Sheet API 發送了 {len(updates)} 個單元格更新請求。")
+    except Exception as update_error:
+        print(f"ERROR_DATA_UPDATE: 更新 Google Sheet 資料單元格失敗: {update_error}")
+        exit(1)
 
-# === 新增最後更新時間（在 G 欄位的最後一列）===
-last_row = len(summary_df) + 2  # +2 是因為從第2列開始寫入
+# === 新增最後更新時間 (在 G 欄位的最後一列) ===
+last_row_calculated = len(summary_df) + 2
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-sheet.update_cell(last_row, 7, f"最後更新時間：{current_time}")
+
+# ====== 關鍵的 DEBUGGING 點 ======
+# 打印計算出的行號，以及它會寫入哪個欄位 (G欄 / Col 7)
+print(f"DEBUG_TIME: 計算出的最後一行 (用於時間更新): {last_row_calculated}")
+print(f"DEBUG_TIME: 嘗試將時間寫入單元格 G{last_row_calculated}")
+
+# 暫時將時間寫入一個固定的、不會被數據覆蓋的單元格，例如 Z1 (第 26 欄, 第 1 行)
+# 這樣可以明確判斷 update_cell 本身是否有問題
+sheet.update_cell(row=1, col=26, f"最後更新時間：{current_time}") 
+print(f"DEBUG_TIME: 也嘗試將時間寫入固定單元格 Z1。") # 增加一個日誌確認固定寫入
+
+# 保留您原來的寫法，看它最終寫在哪裡
+sheet.update_cell(last_row_calculated, 7, f"最後更新時間：{current_time}") 
+
 
 print("✅ 已成功同步至 Google Sheet！")
 
