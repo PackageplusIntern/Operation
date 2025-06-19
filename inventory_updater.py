@@ -183,14 +183,28 @@ taiwan_timezone = pytz.timezone('Asia/Taipei')
 # 獲取當前台灣時間
 current_time_taiwan = datetime.now(taiwan_timezone).strftime("%Y-%m-%d %H:%M:%S")
 
+# <--- 請將這一行放在這裡！它是必須的定義！
+last_row_calculated = len(summary_df) + 2
+
 # ====== 關鍵的 DEBUGGING 點 ======
 # 打印計算出的行號，以及它會寫入哪個欄位 (G欄 / Col 7)
 print(f"DEBUG_TIME: 計算出的最後一行 (用於時間更新): {last_row_calculated}")
 print(f"DEBUG_TIME: 嘗試將時間寫入單元格 G{last_row_calculated}")
-print(f"DEBUG_TIME: 將寫入的時間 (台灣時間) 為: {current_time_taiwan}") 
+print(f"DEBUG_TIME: 將寫入的時間 (台灣時間) 為: {current_time_taiwan}")
+
+# 暫時將時間寫入一個固定的、不會被數據覆蓋的單元格，例如 Z1 (第 26 欄, 第 1 行)
+# 這樣可以明確判斷 update_cell 本身是否有問題
+# 注意：這裡的 value 參數應該使用 current_time_taiwan
+sheet.update_cell(row=1, col=26, value=f"最後更新時間：{current_time_taiwan}")
+# 之前這行您漏了 value=，導致 SyntaxError。現在請確定有 value=
+# 也請確認使用的是 current_time_taiwan，因為您上面已經定義了它。
+print(f"DEBUG_TIME: 也嘗試將時間寫入固定單元格 Z1。")
 
 # 保留您原來的寫法，看它最終寫在哪裡
-sheet.update_cell(row=last_row_calculated, col=7, value=f"最後更新時間：{current_time}") # <--- 在這裡也加上 value=，並建議明確寫上 row= 和 col=
+# 注意：這裡的 value 參數應該使用 current_time_taiwan
+sheet.update_cell(row=last_row_calculated, col=7, value=f"最後更新時間：{current_time_taiwan}")
+# 之前這行您漏了 value=，現在請確定有 value=
+# 也請確認使用的是 current_time_taiwan
 
 print("✅ 已成功同步至 Google Sheet！")
 
