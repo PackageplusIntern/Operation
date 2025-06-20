@@ -164,10 +164,24 @@ df = df.sort_values(by="排序").drop(columns=["排序"])
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# 授權
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(google_creds_dict, scope)
-client = gspread.authorize(creds)
+# 從環境變數獲取 Google 憑證
+try:
+    google_credentials_json = os.environ.get("GOOGLE_CREDENTIALS")
+    if not google_credentials_json:
+        raise ValueError("GOOGLE_CREDENTIALS 環境變數未設定。")
+    
+    # 將 JSON 字串轉換為 Python 字典
+    google_creds_dict = json.loads(google_credentials_json)
+
+    # 授權
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(google_creds_dict, scope)
+    client = gspread.authorize(creds)
+
+except Exception as e:
+    print(f"與 Google Sheets 進行身份驗證時發生錯誤: {e}")
+    driver.quit()
+    exit()
 
 
 sheet_id = "1qB5xe4inx4spFXPxOdSytL_BUElR6Bd0aVZ2TTqrAuY"
