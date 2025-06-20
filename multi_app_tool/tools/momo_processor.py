@@ -106,4 +106,4 @@ def momo_excel_app():
             else:
                 st.error("❗ 處理失敗，請檢查錯誤訊息。")
     st.markdown("---")
-    st.markdown("如有任何問題，請聯繫 IT 部門。")
+    st.markdown("如有任何問題，可能沒有人可以修XD(再看看)")

@@ -33,4 +33,4 @@ elif selected_tool == "Momo 訂單處理": # <-- 新增這個條件
 # 您可以根據需要繼續添加更多 elif 條件來支持其他工具
 
 st.markdown("---")
-st.markdown("由 IT 部門提供技術支援。")
+st.markdown("由營運部Intern製作～祝大家用的開心")
