@@ -11,7 +11,7 @@ from io import BytesIO # 用於處理檔案下載
 # from tkinter import filedialog, messagebox
 
 # 您的翻譯字典保持不變
-translation_map = {
+translation_map_shopline = {
     "Taiwan": "台灣",
 
 
@@ -451,109 +451,70 @@ translation_map = {
 
 }
 
-
-
-
-def process_excel_logic(file_content): # 參數現在是檔案內容 (BytesIO)
+# 處理核心邏輯函式 (原本的 process_excel_logic)
+def process_shopline_excel_logic(file_content, translation_map_param):
     """ 處理 Excel 數據的核心邏輯，不包含 GUI 互動 """
     try:
-        # 讀取 Excel 檔案內容（從 BytesIO 對象讀取）
-        # openpyxl.load_workbook 可以直接從 BytesIO 讀取
+        # ... 您 simple_excel_app.py 中 process_excel_logic 的所有內容 ...
+        # 確保在這裡使用了傳入的 translation_map
         st.info("🔄 正在讀取 Excel 檔案...")
         wb = openpyxl.load_workbook(file_content)
-        sheet = wb.active  # 取得第一個工作表
+        sheet = wb.active
         st.success("✔ Excel 讀取成功！")
 
-        # 找到 DE 欄的位置（Excel 是 1-indexed，DE = 第 109 欄）
-        de_col_idx = 109
+        # ... (其他處理步驟，如插入欄位，填寫公式，地址清理) ...
 
-        # **步驟 1：在 DE 左側插入新欄位（往右移）**
-        st.info("🔄 正在插入新欄位 '折扣總金額'...")
-        sheet.insert_cols(de_col_idx)
-
-        # **步驟 2：填入標題**
-        sheet.cell(row=1, column=de_col_idx, value="折扣總金額")
-
-        # **步驟 3：列 2~最大行 填入公式 `SUM(CZ:DD)`**
-        # 注意：sheet.max_row 會自動找到最後一行的位置
-        st.info("🔄 正在填入折扣總金額公式...")
-        for row in range(2, sheet.max_row + 1):
-            formula = "=SUM(CZ{}:DD{})".format(row, row)
-            sheet.cell(row=row, column=de_col_idx, value=formula)
-        st.success("✔ 折扣總金額公式填入完成！")
-
-        # **處理 BH 欄（完整地址）**
-        bh_col_idx = 60  # BH 欄（Excel 1-indexed = 第 60 欄）
-        st.info("🔄 正在處理地址欄位 (移除 '台灣 + 郵遞區號')...")
-        for row_idx in range(2, sheet.max_row + 1):  # 遍歷所有行
-            cell_obj = sheet.cell(row=row_idx, column=bh_col_idx)
-            full_address = cell_obj.value  # 取得完整地址
-
-            if full_address and isinstance(full_address, str) and full_address.startswith("台灣 "):  # 檢查是否以「台灣」開頭
-                # 使用正則表達式刪除「台灣」+「郵遞區號」（3~5碼數字）
-                updated_address = re.sub(r"^台灣 \d{3,5} ", "", full_address)
-
-                # **確保不刪除只有「台灣」的地址**
-                if updated_address.strip() != "台灣":  
-                    cell_obj.value = updated_address
-        st.success("✔ 地址欄位處理完成！")
-
-        # ✅ **步驟 4：翻譯 BC 到 BH 欄的行政區名稱**
-        bc_col_idx = 55 # BC 欄
+        # ✅ 翻譯 BC 到 BH 欄的行政區名稱 (確保這裡使用 translation_map)
+        bc_col_idx = 55
+        bh_col_idx = 60
         st.info("🔄 正在翻譯行政區名稱...")
         for row_idx in range(2, sheet.max_row + 1):
-            for col_idx in range(bc_col_idx, bh_col_idx + 1): # 包含 BH 欄
+            for col_idx in range(bc_col_idx, bh_col_idx + 1):
                 cell = sheet.cell(row=row_idx, column=col_idx)
-                if cell.value and isinstance(cell.value, str):  # 確保是字串
-                    # 按照長度從長到短排序，避免短關鍵字替換長關鍵字的子字串
+                if cell.value and isinstance(cell.value, str):
                     sorted_translations = sorted(translation_map.items(), key=lambda item: len(item[0]), reverse=True)
                     for eng, zh in sorted_translations:
                         if eng in cell.value:
                             cell.value = cell.value.replace(eng, zh)
         st.success("✔ 行政區名稱翻譯完成！")
-             
-        st.success("✅ 所有處理步驟完成！")
-        return wb # 返回修改後的 Workbook 對象
 
+        return wb
     except Exception as e:
         st.error(f"處理失敗：\n{str(e)}")
         return None
 
-# --- Streamlit 應用程式介面 ---
 
-st.set_page_config(layout="wide", page_title="Shopline 訂單 Excel 處理工具")
+# Streamlit 介面函式 (原本的 Streamlit 應用程式介面部分)
+def shopline_excel_app():
+    st.header("🐦 Shopline 訂單 Excel 處理工具")
+    st.markdown("這個工具可以處理 Shopline 訂單 Excel，進行公式插入、地址清理和地區翻譯。")
 
-st.title("📦 Shopline 訂單 Excel 處理工具")
-st.markdown("---")
+    uploaded_file = st.file_uploader("請上傳您要處理的 Shopline 訂單 Excel 檔案 (.xlsx)", type=["xlsx"])
 
-st.header("1. 上傳您的 Excel 檔案")
+    if uploaded_file is not None:
+        if st.button("🚀 開始處理 Shopline 訂單"):
+            with st.spinner("檔案正在處理中，請稍候..."):
+                # 調用核心處理邏輯
+                processed_workbook = process_excel_logic_app1(uploaded_file, translation_map_excel_app1) 
 
-uploaded_file = st.file_uploader("請上傳您要處理的 Shopline 訂單 Excel 檔案 (.xlsx)", type=["xlsx"])
+            if processed_workbook:
+                st.success("✅ 處理完成！您可以下載結果檔案。")
+                today_date = datetime.datetime.now().strftime("%m%d")
+                output_filename = f"{today_date}_Shopline訂單.xlsx"
 
-if uploaded_file is not None:
-    if st.button("🚀 開始處理"):
-        with st.spinner("檔案正在處理中，請稍候..."): # 顯示載入動畫
-            processed_workbook = process_excel_logic(uploaded_file)
+                # 下載按鈕邏輯
+                from io import BytesIO
+                output_buffer = BytesIO()
+                processed_workbook.save(output_buffer)
+                output_buffer.seek(0)
 
-        if processed_workbook:
-            st.success("✅ 處理完成！您可以下載結果檔案。")
-
-            today_date = datetime.datetime.now().strftime("%m%d")
-            output_filename = f"{today_date}_Shopline訂單.xlsx"
-
-            # 將修改後的 Workbook 保存到 BytesIO 對象中
-            output_buffer = BytesIO()
-            processed_workbook.save(output_buffer)
-            output_buffer.seek(0) # 重置緩衝區指標到開頭
-
-            st.download_button(
-                label=f"💾 下載 {output_filename}",
-                data=output_buffer,
-                file_name=output_filename,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            st.error("❗ 處理失敗，請檢查錯誤訊息。")
-
-st.markdown("---")
-st.markdown("如有任何問題，請聯繫 IT 部門。")
+                st.download_button(
+                    label=f"💾 下載 {output_filename}",
+                    data=output_buffer,
+                    file_name=output_filename,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            else:
+                st.error("❗ 處理失敗，請檢查錯誤訊息。")
+    st.markdown("---")
+    st.markdown("如有任何問題，請聯繫 IT 部門。")
