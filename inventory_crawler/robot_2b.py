@@ -163,11 +163,12 @@ df = df.sort_values(by="排序").drop(columns=["排序"])
 # === 寫入 Google Sheet：Ｆ欄位（第 6 欄） ===
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime
 
+# 授權
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("operation-robot-cc8aff03319e.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(google_creds_dict, scope)
 client = gspread.authorize(creds)
+
 
 sheet_id = "1qB5xe4inx4spFXPxOdSytL_BUElR6Bd0aVZ2TTqrAuY"
 sheet = client.open_by_key(sheet_id).worksheet("庫存管理表")
