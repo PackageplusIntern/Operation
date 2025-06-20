@@ -3,13 +3,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.options import Options # 引入 Options
+from selenium.webdriver.chrome.options import Options 
 import time
 import re
 from datetime import datetime
 import os # 引入 os 用於環境變數
 import json # 引入 json 用於憑證
-import pytz
+import pytz # 引入 pytz用來設定時間
 
 # === 設定 ChromeDriver 選項 ===
 chrome_options = Options()
@@ -59,6 +59,7 @@ time.sleep(1)
 
 # === 抓取庫存資料 ===
 inventory_data = []
+
 rows = driver.find_elements(By.CSS_SELECTOR, "#stock-table tbody tr")
 for row in rows:
     columns = row.find_elements(By.TAG_NAME, "td")
@@ -74,7 +75,7 @@ for row in rows:
         # === 防盜貼紙：不篩選良品，強制統一命名 ===
         if "防盜貼紙" in product_name or "RP-ANS1" in product_name:
             product_code = "RP-ANS1 R膠防盜貼紙"
-            # print(f"✅ [防盜貼紙] {product_name}, 狀態: {quality_status}, 庫存: {available_stock}")
+            # print(f"[防盜貼紙] {product_name}, 狀態: {quality_status}, 庫存: {available_stock}")
         elif "良品" not in quality_status:
             continue
         inventory_data.append({
@@ -151,8 +152,8 @@ except Exception as e:
     driver.quit()
     exit()
 
-# === 使用 Google Sheet ID 開啟（更穩定）===
-sheet_id = "1U6F3hvj76YGOSWodEkfZmkSS31F1QmNndI16igBkgGE"  # 替換為你的實際 Sheet ID
+# === 使用 Google Sheet ID 開啟 ===
+sheet_id = "1U6F3hvj76YGOSWodEkfZmkSS31F1QmNndI16igBkgGE"  # Sheet ID
 sheet = client.open_by_key(sheet_id).worksheet("3. 安庫參考表（自動）")
 
 # === 更新每筆庫存資料到 Google Sheet (G欄 與 Q欄) ===
@@ -161,9 +162,9 @@ for idx, row in summary_df.iterrows():
     q_value = row['不包含R的數量']
     g_value = row['現有總庫存量']
     
-    # 偵錯訊息：打印準備更新的值
-    print(f"DEBUG_DATA: 準備更新 第 {idx + 2} 行, 第 7 欄 (Q) 資料為: {q_value}")
-    print(f"DEBUG_DATA: 準備更新 第 {idx + 2} 行, 第 17 欄 (G) 資料為: {g_value}")
+    # debug用：爬蟲更新的值
+    #print(f"DEBUG_DATA: 準備更新 第 {idx + 2} 行, 第 7 欄 (Q) 資料為: {q_value}")
+    #print(f"DEBUG_DATA: 準備更新 第 {idx + 2} 行, 第 17 欄 (G) 資料為: {g_value}")
 
     updates.append(gspread.Cell(row=idx + 2, col=7, value=q_value))
     updates.append(gspread.Cell(row=idx + 2, col=17, value=g_value))
@@ -179,24 +180,11 @@ if updates:
 # === 新增最後更新時間 ===
 # 定義台灣時區
 taiwan_timezone = pytz.timezone('Asia/Taipei')
-
 # 獲取當前台灣時間
 current_time_taiwan = datetime.now(taiwan_timezone).strftime("%Y-%m-%d %H:%M:%S")
 
-# <--- 請將這一行放在這裡！它是必須的定義！
 last_row_calculated = len(summary_df) + 2
-
-# ====== 關鍵的 DEBUGGING 點 ======
-# 打印計算出的行號，以及它會寫入哪個欄位 (G欄 / Col 7)
-print(f"DEBUG_TIME: 計算出的最後一行 (用於時間更新): {last_row_calculated}")
-print(f"DEBUG_TIME: 嘗試將時間寫入單元格 G{last_row_calculated}")
-print(f"DEBUG_TIME: 將寫入的時間 (台灣時間) 為: {current_time_taiwan}")
-
-# 保留您原來的寫法，看它最終寫在哪裡
-# 注意：這裡的 value 參數應該使用 current_time_taiwan
 sheet.update_cell(row=last_row_calculated, col=7, value=f"最後更新時間：{current_time_taiwan}")
-# 之前這行您漏了 value=，現在請確定有 value=
-# 也請確認使用的是 current_time_taiwan
 
 print("✅ 已成功同步至 Google Sheet！")
 
