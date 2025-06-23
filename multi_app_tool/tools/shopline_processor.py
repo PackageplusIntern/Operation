@@ -312,7 +312,7 @@ translation_map_shopline = { # <--- 這裡統一為 translation_map_shopline
     "Danei District": "大內區",
     "Shanshang District": "山上區",
     "Xinshi District": "新市區",
-    "Sinshih District": "新市區",  # variant spelling
+    "Sinshih District": "新市區", # variant spelling
     "Madou District": "麻豆區",
     "Jiali District": "佳里區",
     "Xuejia District": "學甲區",
