@@ -312,7 +312,7 @@ translation_map_shopline = { # <--- 這裡統一為 translation_map_shopline
     "Danei District": "大內區",
     "Shanshang District": "山上區",
     "Xinshi District": "新市區",
-    "Sinshih District": "新市區", # variant spelling
+    "Sinshih District": "新市區",# variant spelling
     "Madou District": "麻豆區",
     "Jiali District": "佳里區",
     "Xuejia District": "學甲區",
@@ -426,7 +426,7 @@ translation_map_shopline = { # <--- 這裡統一為 translation_map_shopline
     "Donghe Township": "東河鄉",
     "Haiduan Township": "海端鄉",
     "Lanyu Township": "蘭嶼鄉",
-    "Green Island Township": "綠島鄉",  # not official name, see below
+    "Green Island Township": "綠島鄉", # not official name, see below
 
     # ✅ 離島地區 Outlying Islands
 
@@ -499,7 +499,7 @@ def process_shopline_excel_logic(file_content, translation_map_param): # 將 tra
 # Streamlit 介面函式 (這個是 main_app.py 要導入並呼叫的)
 def shopline_excel_app():
     st.header("🐦 Shopline 訂單 Excel 處理工具")
-    st.markdown("這個工具可以處理 Shopline 訂單 Excel，進行公式插入、地址清理和地區翻譯。")
+    st.markdown("這個工具可以處理 Shopline 訂單 Excel 進行公式插入、地址清理和地區翻譯。")
 
     uploaded_file = st.file_uploader("請上傳您要處理的 Shopline 訂單 Excel 檔案 (.xlsx)", type=["xlsx"])
 
@@ -507,7 +507,7 @@ def shopline_excel_app():
         if st.button("🚀 開始處理 Shopline 訂單"):
             with st.spinner("檔案正在處理中，請稍候..."): # 顯示載入動畫
                 # 調用核心處理邏輯
-                processed_workbook = process_excel_logic_app1(uploaded_file, translation_map_shopline) # <--- 這裡也要改用 translation_map_shopline
+                processed_workbook = process_shopline_excel_logic(uploaded_file, translation_map_shopline) # <--- 這裡也要改用 translation_map_shopline
 
             if processed_workbook:
                 st.success("✅ 處理完成！您可以下載結果檔案。")
